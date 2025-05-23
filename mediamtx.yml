@@ -1,0 +1,13 @@
+api: yes
+apiAddress: 127.0.0.1:9997
+
+rtspAddress: 0.0.0.0:8554
+protocols: [tcp, udp]
+
+rtmpAddress: 0.0.0.0:1935
+
+paths:
+  local_stream: {}
+  internal_drone: {}
+  local_platform: {}
+
