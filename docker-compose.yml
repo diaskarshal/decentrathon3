@@ -1,0 +1,12 @@
+version: '3'
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: mediamtx
+    ports:
+      - "8554:8554" # Пробрасываем порт RTSP
+      - "1935:1935" # Пробрасываем порт RTMP
+      - "9997:9997" # Пробрасываем порт API (только если нужен внешний доступ к API)
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml
+    restart: unless-stopped
