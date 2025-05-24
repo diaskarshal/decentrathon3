@@ -32,7 +32,7 @@ class NoFlyZoneController {
       const noFlyZone = await NoFlyZone.findOne({ where: { id } });
       
       if (!noFlyZone) {
-        return next(ApiError.notFound("No-fly zone not found"));
+        return next(ApiError.notFound("NoFlyZone not found"));
       }
       
       return res.json(noFlyZone);
@@ -48,7 +48,7 @@ class NoFlyZoneController {
 
       const noFlyZone = await NoFlyZone.findOne({ where: { id } });
       if (!noFlyZone) {
-        return next(ApiError.notFound("No-fly zone not found"));
+        return next(ApiError.notFound("NoFlyZone not found"));
       }
 
       await noFlyZone.update({ geojson, description });
@@ -64,11 +64,11 @@ class NoFlyZoneController {
       const noFlyZone = await NoFlyZone.findOne({ where: { id } });
       
       if (!noFlyZone) {
-        return next(ApiError.notFound("No-fly zone not found"));
+        return next(ApiError.notFound("NoFlyZone not found"));
       }
 
       await noFlyZone.destroy();
-      return res.json({ message: "No-fly zone deleted successfully" });
+      return res.json({ message: "NoFlyZone deleted successfully" });
     } catch (e) {
       next(ApiError.internal(e.message));
     }

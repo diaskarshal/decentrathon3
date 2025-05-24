@@ -20,6 +20,7 @@ The `mediamtx` service listens on:
 - **RTMP:** port 1935  
 - **RTSP:** port 8554  
 - **HTTP API:** port 9997  
+```
 
 ### 2. Testing Static Routes
 

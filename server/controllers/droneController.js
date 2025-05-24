@@ -7,7 +7,7 @@ class DroneController {
       const { brand, model, serial } = req.body;
       
       if (!brand || !model || !serial) {
-        return next(ApiError.badRequest("Brand, model, and serial are required"));
+        return next(ApiError.badRequest("Please fill in all fields"));
       }
 
       const drone = await Drone.create({ brand, model, serial });

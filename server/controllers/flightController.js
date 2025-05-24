@@ -1,4 +1,4 @@
-const { Flight, Drone, Pilot } = require("../models/models");
+const { Flight, Drone, User } = require("../models/models");
 const ApiError = require("../error/ApiError");
 const axios = require("axios");
 
@@ -30,17 +30,17 @@ class FlightController {
       const { drone_id, pilot_id, route, rtmp_url } = req.body;
       
       if (!drone_id || !pilot_id || !route) {
-        return next(ApiError.badRequest("Drone ID, Pilot ID, and route are required"));
+        return next(ApiError.badRequest("Please fill in all fields"));
       }
 
       const drone = await Drone.findByPk(drone_id);
-      const pilot = await Pilot.findByPk(pilot_id);
+      const pilot = await User.findByPk(pilot_id);
       
       if (!drone) {
         return next(ApiError.notFound("Drone not found"));
       }
       if (!pilot) {
-        return next(ApiError.notFound("Pilot not found"));
+        return next(ApiError.notFound("User not found"));
       }
 
       const flight = await Flight.create({
@@ -48,7 +48,10 @@ class FlightController {
         pilot_id,
         route,
         rtmp_url,
-        status: "pending"
+        status: "pending",
+        altitude,
+        estimated_duration,
+        purpose,
       });
 
       return res.json(flight);
@@ -62,7 +65,7 @@ class FlightController {
       const flights = await Flight.findAll({
         include: [
           { model: Drone, attributes: ['id', 'brand', 'model', 'serial'] },
-          { model: Pilot, attributes: ['id', 'name', 'contacts'] }
+          { model: User, attributes: ['id', 'name', 'phone'] }
         ]
       });
       return res.json(flights);
@@ -78,7 +81,7 @@ class FlightController {
         where: { id },
         include: [
           { model: Drone },
-          { model: Pilot }
+          { model: User }
         ]
       });
       
@@ -157,7 +160,7 @@ class FlightController {
         return next(ApiError.notFound("Flight not found"));
       }
 
-      await flight.update({ drone_id, pilot_id, route, status, rtmp_url });
+      await flight.update({ drone_id, pilot_id, route, status, rtmp_url, altitude, estimated_duration, purpose });
       return res.json(flight);
     } catch (e) {
       next(ApiError.internal(e.message));
