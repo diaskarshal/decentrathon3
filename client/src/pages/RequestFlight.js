@@ -1,22 +1,92 @@
-import React, { useState, useContext } from "react";
-import { Container, Card, Form, Button, Row, Col } from "react-bootstrap";
+import React, { useState, useContext, useEffect } from "react";
+import {
+  Container,
+  Card,
+  Form,
+  Button,
+  Row,
+  Col,
+  Alert,
+  Spinner,
+} from "react-bootstrap";
 import { Context } from "../index";
+import { createFlight } from "../http/flightAPI";
+import { getMyDrones } from "../http/droneAPI";
+import { useNavigate } from "react-router-dom";
+import { MY_FLIGHTS_ROUTE } from "../utils/consts";
 
 const RequestFlight = () => {
   const { user } = useContext(Context);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [drones, setDrones] = useState([]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  
   const [formData, setFormData] = useState({
-    droneId: "",
+    drone_id: "",
     route: "",
     altitude: "",
-    estimatedDuration: "",
     purpose: "",
-    rtmpUrl: "",
+    rtmp_url: "",
   });
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    fetchDrones();
+  }, []);
+
+  const fetchDrones = async () => {
+    try {
+      const dronesData = await getMyDrones();
+      setDrones(dronesData);
+    } catch (error) {
+      setError("Failed to load drones");
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    //TODO: Implement flight request submission
-    console.log("Flight request:", formData);
+    setLoading(true);
+    setError("");
+
+    try {
+      let parsedRoute;
+      try {
+        parsedRoute = JSON.parse(formData.route);
+      } catch (e) {
+        setError("Invalid JSON format for route");
+        setLoading(false);
+        return;
+      }
+
+      const flightData = {
+        drone_id: parseInt(formData.drone_id),
+        pilot_id: user.user.id,
+        route: parsedRoute,
+        altitude: parseFloat(formData.altitude),
+        purpose: formData.purpose,
+        rtmp_url: formData.rtmp_url || null,
+      };
+
+      await createFlight(flightData);
+      setSuccess("Flight request submitted successfully!");
+      
+      setFormData({
+        drone_id: "",
+        route: "",
+        altitude: "",
+        purpose: "",
+        rtmp_url: "",
+      });
+
+      setTimeout(() => {
+        navigate(MY_FLIGHTS_ROUTE);
+      }, 2000);
+    } catch (error) {
+      setError(error.response?.data?.message || "Failed to submit flight request");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -35,18 +105,27 @@ const RequestFlight = () => {
               <h3>Request Flight Permission</h3>
             </Card.Header>
             <Card.Body>
+              {error && <Alert variant="danger">{error}</Alert>}
+              {success && <Alert variant="success">{success}</Alert>}
+              
               <Form onSubmit={handleSubmit}>
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Drone ID</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="droneId"
-                        value={formData.droneId}
+                      <Form.Label>Drone</Form.Label>
+                      <Form.Select
+                        name="drone_id"
+                        value={formData.drone_id}
                         onChange={handleChange}
                         required
-                      />
+                      >
+                        <option value="">Select a drone</option>
+                        {drones.map((drone) => (
+                          <option key={drone.id} value={drone.id}>
+                            {drone.brand} {drone.model} ({drone.serial})
+                          </option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                   <Col md={6}>
@@ -57,6 +136,8 @@ const RequestFlight = () => {
                         name="altitude"
                         value={formData.altitude}
                         onChange={handleChange}
+                        min="1"
+                        max="400"
                         required
                       />
                     </Form.Group>
@@ -74,33 +155,21 @@ const RequestFlight = () => {
                     placeholder='{"coordinates": [[lng, lat], [lng, lat]]}'
                     required
                   />
+                  <Form.Text className="text-muted">
+                    Enter route as JSON with coordinates array
+                  </Form.Text>
                 </Form.Group>
 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Estimated Duration (minutes)</Form.Label>
-                      <Form.Control
-                        type="number"
-                        name="estimatedDuration"
-                        value={formData.estimatedDuration}
-                        onChange={handleChange}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>RTMP Stream URL (optional)</Form.Label>
-                      <Form.Control
-                        type="url"
-                        name="rtmpUrl"
-                        value={formData.rtmpUrl}
-                        onChange={handleChange}
-                        placeholder="rtmp://example.com/live/stream"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                <Form.Group className="mb-3">
+                  <Form.Label>RTMP Stream URL (optional)</Form.Label>
+                  <Form.Control
+                    type="url"
+                    name="rtmp_url"
+                    value={formData.rtmp_url}
+                    onChange={handleChange}
+                    placeholder="rtmp://example.com/live/stream"
+                  />
+                </Form.Group>
 
                 <Form.Group className="mb-3">
                   <Form.Label>Purpose</Form.Label>
@@ -110,11 +179,31 @@ const RequestFlight = () => {
                     name="purpose"
                     value={formData.purpose}
                     onChange={handleChange}
+                    placeholder="Purpose of the flight..."
                   />
                 </Form.Group>
 
-                <Button variant="primary" type="submit">
-                  Submit Request
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={loading}
+                  className="w-100"
+                >
+                  {loading ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                        className="me-2"
+                      />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Request"
+                  )}
                 </Button>
               </Form>
             </Card.Body>

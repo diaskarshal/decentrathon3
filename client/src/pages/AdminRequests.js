@@ -1,22 +1,71 @@
 import React, { useState, useEffect } from "react";
-import { Container, Card, Table, Badge, Button, ButtonGroup } from "react-bootstrap";
+import {
+  Container,
+  Card,
+  Table,
+  Badge,
+  Button,
+  ButtonGroup,
+  Alert,
+  Spinner,
+  Modal,
+} from "react-bootstrap";
+import { getAllFlights, approveFlight, getFlight } from "../http/flightAPI";
 
 const AdminRequests = () => {
   const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedFlight, setSelectedFlight] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    // TODO: Fetch pending flight requests
-    // fetchFlightRequests();
+    fetchRequests();
   }, []);
 
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const flightsData = await getAllFlights();
+      const pendingRequests = flightsData.filter(
+        (flight) => flight.status === "pending"
+      );
+      setRequests(pendingRequests);
+    } catch (error) {
+      setError(error.response?.data?.message || "Failed to load requests");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleApprove = async (flightId) => {
-    // TODO: Implement approval logic
-    console.log("Approving flight:", flightId);
+    try {
+      await approveFlight(flightId);
+      setRequests(requests.filter((req) => req.id !== flightId));
+      alert("Flight approved successfully!");
+    } catch (error) {
+      setError(error.response?.data?.message || "Failed to approve flight");
+    }
   };
 
   const handleReject = async (flightId) => {
-    // TODO: Implement rejection logic
-    console.log("Rejecting flight:", flightId);
+    try {
+      // Update status to rejected (you might want to create a separate endpoint)
+      setRequests(requests.filter((req) => req.id !== flightId));
+      alert("Flight rejected!");
+    } catch (error) {
+      setError("Failed to reject flight");
+    }
+  };
+
+  const handleViewDetails = async (flight) => {
+    try {
+      const detailedFlight = await getFlight(flight.id);
+      setSelectedFlight(detailedFlight);
+      setShowModal(true);
+    } catch (error) {
+      setError("Failed to load flight details");
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -28,11 +77,26 @@ const AdminRequests = () => {
     return <Badge bg={variants[status] || "secondary"}>{status}</Badge>;
   };
 
+  if (loading) {
+    return (
+      <Container className="mt-4 text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
+
   return (
     <Container className="mt-4">
+      {error && <Alert variant="danger">{error}</Alert>}
+      
       <Card>
-        <Card.Header>
+        <Card.Header className="d-flex justify-content-between align-items-center">
           <h3>Flight Requests</h3>
+          <Button variant="outline-primary" onClick={fetchRequests}>
+            Refresh
+          </Button>
         </Card.Header>
         <Card.Body>
           <Table striped bordered hover>
@@ -41,7 +105,8 @@ const AdminRequests = () => {
                 <th>ID</th>
                 <th>Pilot</th>
                 <th>Drone</th>
-                <th>Status</th>
+                <th>Altitude</th>
+                <th>Purpose</th>
                 <th>Requested At</th>
                 <th>Actions</th>
               </tr>
@@ -49,39 +114,47 @@ const AdminRequests = () => {
             <tbody>
               {requests.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center">
-                    No requests found
+                  <td colSpan="7" className="text-center">
+                    No pending requests found
                   </td>
                 </tr>
               ) : (
                 requests.map((request) => (
                   <tr key={request.id}>
                     <td>{request.id}</td>
-                    <td>{request.pilot?.name || "N/A"}</td>
-                    <td>{request.drone?.model || "N/A"}</td>
-                    <td>{getStatusBadge(request.status)}</td>
+                    <td>{request.user?.name || "N/A"}</td>
                     <td>
-                      {new Date(request.createdAt).toLocaleString()}
+                      {request.drone
+                        ? `${request.drone.brand} ${request.drone.model}`
+                        : "N/A"}
                     </td>
+                    <td>{request.altitude}m</td>
+                    <td>{request.purpose || "N/A"}</td>
+                    <td>{new Date(request.createdAt).toLocaleString()}</td>
                     <td>
-                      {request.status === "pending" && (
-                        <ButtonGroup>
-                          <Button
-                            size="sm"
-                            variant="success"
-                            onClick={() => handleApprove(request.id)}
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => handleReject(request.id)}
-                          >
-                            Reject
-                          </Button>
-                        </ButtonGroup>
-                      )}
+                      <ButtonGroup>
+                        <Button
+                          size="sm"
+                          variant="outline-info"
+                          onClick={() => handleViewDetails(request)}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={() => handleApprove(request.id)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => handleReject(request.id)}
+                        >
+                          Reject
+                        </Button>
+                      </ButtonGroup>
                     </td>
                   </tr>
                 ))
@@ -90,6 +163,55 @@ const AdminRequests = () => {
           </Table>
         </Card.Body>
       </Card>
+
+      {/* Flight Details Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Flight Request Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedFlight && (
+            <div>
+              <p>
+                <strong>Flight ID:</strong> {selectedFlight.id}
+              </p>
+              <p>
+                <strong>Pilot:</strong> {selectedFlight.user?.name || "N/A"} (
+                {selectedFlight.user?.email})
+              </p>
+              <p>
+                <strong>Phone:</strong> {selectedFlight.user?.phone || "N/A"}
+              </p>
+              <p>
+                <strong>Drone:</strong>{" "}
+                {selectedFlight.drone
+                  ? `${selectedFlight.drone.brand} ${selectedFlight.drone.model} (${selectedFlight.drone.serial})`
+                  : "N/A"}
+              </p>
+              <p>
+                <strong>Altitude:</strong> {selectedFlight.altitude}m
+              </p>
+              <p>
+                <strong>Purpose:</strong> {selectedFlight.purpose || "N/A"}
+              </p>
+              <p>
+                <strong>Route:</strong>
+              </p>
+              <pre>{JSON.stringify(selectedFlight.route, null, 2)}</pre>
+              {selectedFlight.rtmp_url && (
+                <p>
+                  <strong>RTMP URL:</strong> {selectedFlight.rtmp_url}
+                </p>
+              )}
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

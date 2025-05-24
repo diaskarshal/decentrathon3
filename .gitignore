@@ -17,7 +17,10 @@ server/node_modules/
 .env.production
 client/.env
 client/.env.production
+client/.env.example
 server/.env
+server/.env.example
+server/.env.production
 
 
 # ===== Build Output =====

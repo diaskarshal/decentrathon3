@@ -10,7 +10,7 @@ class DroneController {
         return next(ApiError.badRequest("Please fill in all fields"));
       }
 
-      const drone = await Drone.create({ brand, model, serial });
+      const drone = await Drone.create({ brand, model, serial, owner_id });
       return res.json(drone);
     } catch (e) {
       if (e.name === "SequelizeUniqueConstraintError") {
@@ -23,6 +23,17 @@ class DroneController {
   async getAll(req, res, next) {
     try {
       const drones = await Drone.findAll();
+      return res.json(drones);
+    } catch (e) {
+      next(ApiError.internal(e.message));
+    }
+  }
+
+  async getMyDrones(req, res, next) {
+    try {
+      const drones = await Drone.findAll({
+        where: { owner_id: req.user.id }
+      });
       return res.json(drones);
     } catch (e) {
       next(ApiError.internal(e.message));

@@ -25,13 +25,17 @@ const Auth = observer(() => {
       if (isLogin) {
         data = await login(email, password);
       } else {
+        if (!name || !phone) {
+          alert("Please fill in all fields");
+          return;
+        }
         data = await registration(email, password, name, phone);
       }
       user.setUser(data);
       user.setIsAuth(true);
       history(MAIN_ROUTE);
     } catch (e) {
-      alert(e.response.data.message);
+      alert(e.response?.data?.message || "An error occurred");
     }
   };
 
@@ -48,6 +52,7 @@ const Auth = observer(() => {
             placeholder="Enter your email..."
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
           <Form.Control
             className="mt-3"
@@ -55,19 +60,26 @@ const Auth = observer(() => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type="password"
+            required
           />
-          <Form.Control
-            className="mt-3"
-            placeholder="Enter your name..."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <Form.Control
-            className="mt-3"
-            placeholder="Enter your phone..."
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
+          {!isLogin && (
+            <>
+              <Form.Control
+                className="mt-3"
+                placeholder="Enter your name..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <Form.Control
+                className="mt-3"
+                placeholder="Enter your phone..."
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+            </>
+          )}
           <Row className="d-flex justify-content-between mt-3 pl-3 pr-3">
             {isLogin ? (
               <div>
