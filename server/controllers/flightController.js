@@ -50,7 +50,6 @@ class FlightController {
         rtmp_url,
         status: "pending",
         altitude,
-        estimated_duration,
         purpose,
       });
 
@@ -160,7 +159,7 @@ class FlightController {
         return next(ApiError.notFound("Flight not found"));
       }
 
-      await flight.update({ drone_id, pilot_id, route, status, rtmp_url, altitude, estimated_duration, purpose });
+      await flight.update({ drone_id, pilot_id, route, status, rtmp_url, altitude, purpose });
       return res.json(flight);
     } catch (e) {
       next(ApiError.internal(e.message));

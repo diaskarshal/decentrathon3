@@ -33,8 +33,6 @@ const Flight = sequelize.define("flight", {
   start_time: { type: DataTypes.DATE },
   end_time: { type: DataTypes.DATE },
   altitude: { type: DataTypes.FLOAT, allowNull: false },
-  estimated_duration: { type: DataTypes.INTEGER },
-  actual_duration: { type: DataTypes.INTEGER },
   purpose: { type: DataTypes.STRING },
 });
 
