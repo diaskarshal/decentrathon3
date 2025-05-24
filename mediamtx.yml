@@ -1,13 +1,13 @@
-api: yes
-apiAddress: 127.0.0.1:9997
+api:
+  enabled: true
+  address: ":9997"
+  allowOrigin: "*"
 
-rtspAddress: 0.0.0.0:8554
-protocols: [tcp, udp]
+rtmp:
+  address: ":1935"
 
-rtmpAddress: 0.0.0.0:1935
+rtsp:
+  address: ":8554"
+  protocols: [tcp, udp]
 
-paths:
-  local_stream: {}
-  internal_drone: {}
-  local_platform: {}
-
+paths: {}

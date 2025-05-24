@@ -1,0 +1,35 @@
+# ===== Global Files =====
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# ===== Node Modules =====
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# ===== Environment Files =====
+.env
+.env.production
+client/.env
+client/.env.production
+server/.env
+
+
+# ===== Build Output =====
+dist/
+build/
+
+# ===== Server Static Files =====
+# Ignore the server static folder that holds uploaded images
+server/static/
+
+# ===== Misc =====
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vercel
