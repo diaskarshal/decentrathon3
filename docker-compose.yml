@@ -15,11 +15,11 @@ services:
   mediamtx:
     image: bluenviron/mediamtx:latest
     container_name: mediamtx
-    command: ["/mediamtx", "/mediamtx.yml"]
+    # command: ["/mediamtx", "/mediamtx.yml"]
     ports:
-      - "1935:1935"   # RTMP
-      - "8554:8554"   # RTSP
-      - "9997:9997"   # HTTP-API
+      - "1935:1935" # RTMP
+      - "8554:8554" # RTSP
+      - "9997:9997" # HTTP-API
     volumes:
       - ./mediamtx.yml:/mediamtx.yml:Z
     restart: unless-stopped

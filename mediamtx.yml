@@ -1,13 +1,38 @@
-api:
-  enabled: true
-  address: ":9997"
-  allowOrigin: "*"
+authInternalUsers:
+  - user: admin
+    pass: sha256:WZRHGrsBESr8wYFZ9sx0tPURuZgG2lmzyvWpwXPKz8U=
+    ips: []
+    permissions:
+      - action: api
+        path:
 
-rtmp:
-  address: ":1935"
+api: yes
+apiAllowOrigin: "*"
 
-rtsp:
-  address: ":8554"
-  protocols: [tcp, udp]
+rtsp: yes
 
-paths: {}
+rtspTransports: [udp, multicast, tcp]
+
+rtspEncryption: "no"
+
+rtspAddress: :8554
+
+rtspsAddress: :8322
+
+rtpAddress: :8000
+
+rtcpAddress: :8001
+
+multicastIPRange: 224.1.0.0/16
+
+multicastRTPPort: 8002
+
+multicastRTCPPort: 8003
+
+rtmp: yes
+
+rtmpAddress: :1935
+
+rtmpEncryption: "no"
+
+rtmpsAddress: :1936
