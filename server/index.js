@@ -8,7 +8,7 @@ const errorHandler = require("./middleware/ErrorHandlingMiddleware");
 const { initWebSocketTelemetry } = require("./websockets/telemetry");
 const http = require("http");
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const app = express();
 const server = http.createServer(app);
 

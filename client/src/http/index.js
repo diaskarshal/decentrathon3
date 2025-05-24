@@ -1,11 +1,11 @@
 import axios from "axios";
 
 const $host = axios.create({//does not require auth
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: "http://localhost:5001",
 });
 
 const $authHost = axios.create({//requires auth, header authorizaiton will be added automatically
-  baseURL: process.env.REACT_APP_API_URL,
+  baseURL: "http://localhost:5001",
 });
 
 const authInterceptor = (config) => {
