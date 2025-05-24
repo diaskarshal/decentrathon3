@@ -40,7 +40,16 @@ const NoFlyZone = sequelize.define("no_fly_zone", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   description: { type: DataTypes.STRING },
   geojson: { type: DataTypes.JSONB, allowNull: false },
-  created_by: { type: DataTypes.INTEGER },
+  zone_type: {
+    type: DataTypes.ENUM("polygon", "circle"),
+    allowNull: false,
+    defaultValue: "polygon",
+  },
+  zone_data: {
+    type: DataTypes.JSONB,
+    allowNull: false,
+
+  },
 });
 
 User.hasMany(Drone, { foreignKey: "owner_id", as: "ownedDrones" });

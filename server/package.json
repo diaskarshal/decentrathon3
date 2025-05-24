@@ -21,7 +21,6 @@
     "pg": "^8.16.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",
-    "turf": "^3.0.14",
     "ws": "^8.18.2"
   },
   "devDependencies": {

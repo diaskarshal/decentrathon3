@@ -59,6 +59,21 @@ class FlightController {
     }
   }
 
+  async getMyFlights(req, res, next) {
+    try {
+      const flights = await Flight.findAll({
+        where: { pilot_id: req.user.id },
+        include: [
+          { model: Drone, attributes: ['id', 'brand', 'model', 'serial'] },
+          { model: User, attributes: ['id', 'name', 'phone'] }
+        ]
+      });
+      return res.json(flights);
+    } catch (e) {
+      next(ApiError.internal(e.message));
+    }
+  }
+  
   async getAll(req, res, next) {
     try {
       const flights = await Flight.findAll({

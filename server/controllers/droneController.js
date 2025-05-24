@@ -4,9 +4,9 @@ const ApiError = require("../error/ApiError");
 class DroneController {
   async create(req, res, next) {
     try {
-      const { brand, model, serial } = req.body;
+      const { brand, model, serial, owner_id } = req.body;
       
-      if (!brand || !model || !serial) {
+      if (!brand || !model || !serial || !owner_id) {
         return next(ApiError.badRequest("Please fill in all fields"));
       }
 
