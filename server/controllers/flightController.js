@@ -27,7 +27,7 @@ const deleteStreamPath = async (flightId) => {
 class FlightController {
   async create(req, res, next) {
     try {
-      const { drone_id, pilot_id, route, rtmp_url } = req.body;
+      const { drone_id, pilot_id, route, rtmp_url, altitude, purpose } = req.body;
       
       if (!drone_id || !pilot_id || !route) {
         return next(ApiError.badRequest("Please fill in all fields"));
@@ -152,7 +152,7 @@ class FlightController {
   async update(req, res, next) {
     try {
       const { id } = req.params;
-      const { drone_id, pilot_id, route, status, rtmp_url } = req.body;
+      const { drone_id, pilot_id, route, status, rtmp_url, altitude, purpose } = req.body;
 
       const flight = await Flight.findOne({ where: { id } });
       if (!flight) {

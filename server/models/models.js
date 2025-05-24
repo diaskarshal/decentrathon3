@@ -38,8 +38,9 @@ const Flight = sequelize.define("flight", {
 
 const NoFlyZone = sequelize.define("no_fly_zone", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  name: { type: DataTypes.STRING, allowNull: false },
+  description: { type: DataTypes.STRING },
   geojson: { type: DataTypes.JSONB, allowNull: false },
+  created_by: { type: DataTypes.INTEGER },
 });
 
 User.hasMany(Drone, { foreignKey: "owner_id", as: "ownedDrones" });
