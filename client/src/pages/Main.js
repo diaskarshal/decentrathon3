@@ -1,28 +1,51 @@
-'use client';
-import React from 'react';
-import { MapContainer } from 'react-leaflet/MapContainer';
-import { TileLayer } from 'react-leaflet/TileLayer';
-import { useMap } from 'react-leaflet/hooks';
-import 'leaflet/dist/leaflet.css';
+import React, { useState } from "react";
+import { MapContainer, TileLayer, Polygon, Marker, useMapEvent } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-const CenterMap = () => {
-  const map = useMap();
-  map.setView([51.1155, 71.4572], 12); // Example: center the map manually
+// Fix default icon paths
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+const ClickHandler = ({ addPoint }) => {
+  useMapEvent("click", (e) => {
+    addPoint([e.latlng.lat, e.latlng.lng]);
+  });
   return null;
 };
 
-const MapView = () => {
+const DrawPolygon = () => {
+  const [positions, setPositions] = useState([]);
+
+  const addPoint = (point) => {
+    setPositions((prev) => [...prev, point]);
+  };
+
   return (
-    <div style={{ height: '100vh', width: '100%' }}>
-      <MapContainer center={[0, 0]} zoom={2} style={{ height: '100%', width: '100%' }}>
-        <TileLayer
-          url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-          attribution='&copy; OpenStreetMap contributors'
-        />
-        <CenterMap />
-      </MapContainer>
-    </div>
+    <MapContainer
+      center={[51.105, 71.4272]}
+      zoom={12}
+      style={{ height: "1000px", width: "100%" }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <ClickHandler addPoint={addPoint} />
+      {positions.length > 0 && <Polygon positions={positions} />}
+      {positions.map((pos, idx) => (
+        <Marker key={idx} position={pos} />
+      ))}
+    </MapContainer>
   );
 };
 
-export default MapView;
+export default DrawPolygon;
