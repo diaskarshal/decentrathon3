@@ -1,8 +1,6 @@
-// /client/src/components/AppRouter.js
 import React, { useContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import {
-  ADMIN_ROUTE,
   LOGIN_ROUTE,
   REGISTRATION_ROUTE,
   MAIN_ROUTE,
@@ -11,11 +9,9 @@ import {
   ADMIN_REQUESTS_ROUTE,
   ALL_FLIGHTS_ROUTE,
 } from "../utils/consts";
-import { authRoutes, publicRoutes } from "../routes";
 import { Context } from "../index";
 import Main from "../pages/Main";
 import Auth from "../pages/Auth";
-import Admin from "../pages/Admin";
 import RequestFlight from "../pages/RequestFlight";
 import MyFlights from "../pages/MyFlights";
 import AdminRequests from "../pages/AdminRequests";
@@ -39,7 +35,6 @@ const AppRouter = () => {
           
           {user.user.role === "ADMIN" && (
             <>
-              <Route path={ADMIN_ROUTE} element={<Admin />} />
               <Route path={ADMIN_REQUESTS_ROUTE} element={<AdminRequests />} />
               <Route path={ALL_FLIGHTS_ROUTE} element={<AllFlights />} />
             </>

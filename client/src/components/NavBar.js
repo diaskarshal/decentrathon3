@@ -4,7 +4,6 @@ import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import { NavLink } from "react-router-dom";
 import {
-  ADMIN_ROUTE,
   LOGIN_ROUTE,
   MAIN_ROUTE,
   REQUEST_FLIGHT_ROUTE,
@@ -36,7 +35,7 @@ const NavBar = observer(() => {
             style={{ color: "white", textDecoration: "none" }}
             to={MAIN_ROUTE}
           >
-            UTM System
+            UTM
           </NavLink>
         </Navbar.Brand>
 
