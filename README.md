@@ -1,4 +1,3 @@
-```markdown
 # RTMP → RTSP Converter
 
 A simple converter of video streams from RTMP to RTSP, with dynamic path registration via HTTP API (MediaMTX).
@@ -16,7 +15,6 @@ docker-compose up -d
 
 # Or with Podman Compose
 podman-compose up -d
-```
 
 The `mediamtx` service listens on:
 - **RTMP:** port 1935  
@@ -83,5 +81,4 @@ podman run -d --name mediamtx \
   -v "$(pwd)/mediamtx.yml":/mediamtx.yml:Z \
   bluenviron/mediamtx:latest \
   /mediamtx /mediamtx.yml
-```
 ```
