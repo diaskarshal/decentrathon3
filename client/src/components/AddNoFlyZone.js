@@ -84,7 +84,6 @@ const AddNoFlyZoneForm = ({ show, handleClose, onZoneCreated }) => {
         return;
       }
 
-      // Create GeoJSON format
       const geoJsonData = {
         type: "Feature",
         properties: {
@@ -94,7 +93,7 @@ const AddNoFlyZoneForm = ({ show, handleClose, onZoneCreated }) => {
           type: "Polygon",
           coordinates: [
             [...zonePoints.map(point => [point[1], point[0]]), 
-             [zonePoints[0][1], zonePoints[0][0]]] // Close the polygon
+             [zonePoints[0][1], zonePoints[0][0]]] //close the polygon
           ],
         },
       };
@@ -112,7 +111,6 @@ const AddNoFlyZoneForm = ({ show, handleClose, onZoneCreated }) => {
       await createNoFlyZone(noFlyZoneData);
       setSuccess("No-fly zone created successfully!");
 
-      // Reset form
       setFormData({
         description: "",
         zone_type: "polygon",
@@ -242,7 +240,7 @@ const AddNoFlyZoneForm = ({ show, handleClose, onZoneCreated }) => {
         {(isDrawing || zonePoints.length > 0) && (
           <div style={{ marginTop: "20px", border: "1px solid #444" }}>
             <MapContainer
-              center={[51.13, 71.42]} // Astana coordinates
+              center={[51.13, 71.42]} //Astana coordinates
               zoom={12}
               style={{ height: "400px", width: "100%" }}
             >

@@ -5,7 +5,6 @@ const { Flight, Notification } = require("../models/models");
 
 const cache = new NodeCache({ stdTTL: 60 });
 
-// Все клиенты-юзеры
 const trackingClients = new Set();
 
 function isDroneInsideZone([lng, lat], zoneData) {
@@ -20,7 +19,6 @@ async function handleTelemetry(data, droneId) {
 
   cache.set(`drone:${droneId}`, payload);
 
-  // Проверка выхода за зону
   const flight = await Flight.findOne({ where: { drone_id: droneId, status: "active" } });
   if (flight && flight.zoneData) {
     const inside = isDroneInsideZone(coords, flight.zoneData);
@@ -34,7 +32,6 @@ async function handleTelemetry(data, droneId) {
     }
   }
 
-  // Рассылаем всем клиентам
   broadcastToClients(payload);
 }
 
