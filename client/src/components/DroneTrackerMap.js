@@ -27,7 +27,6 @@ const DroneTrackerMap = () => {
   const [loadingNFZs, setLoadingNFZs] = useState(true);
   const socketRef = useRef(null);
 
-  // Fetch No-Fly Zones
   useEffect(() => {
     const fetchNFZs = async () => {
       try {
