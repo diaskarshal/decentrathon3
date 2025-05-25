@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { Context } from "../index";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LOGIN_ROUTE,
   MAIN_ROUTE,
@@ -11,13 +11,15 @@ import {
   ADMIN_REQUESTS_ROUTE,
   ALL_FLIGHTS_ROUTE,
 } from "../utils/consts";
-import { Button, NavDropdown } from "react-bootstrap";
+import {
+  Button,
+  NavDropdown,
+  Container,
+} from "react-bootstrap";
 import { observer } from "mobx-react-lite";
-import Container from "react-bootstrap/Container";
-import { useNavigate } from "react-router-dom";
 
 const NavBar = observer(() => {
-  const { user } = useContext(Context);
+  const { user, ui } = useContext(Context);
   const navigate = useNavigate();
 
   const logOut = () => {
@@ -46,9 +48,9 @@ const NavBar = observer(() => {
               {user.user.role === "PILOT" && (
                 <>
                   <Nav.Link
-                    as={NavLink}
-                    to={REQUEST_FLIGHT_ROUTE}
-                    style={{ color: "white" }}
+                    as="span"
+                    onClick={() => ui.openForm()}
+                    style={{ color: "white", cursor: "pointer" }}
                   >
                     Request Flight
                   </Nav.Link>

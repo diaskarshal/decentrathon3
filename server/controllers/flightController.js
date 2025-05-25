@@ -42,7 +42,6 @@ class FlightController {
       if (!pilot) {
         return next(ApiError.notFound("User not found"));
       }
-
       const flight = await Flight.create({
         drone_id,
         pilot_id,
@@ -52,8 +51,9 @@ class FlightController {
         altitude,
         purpose,
       });
+      const ws_url = `ws://localhost:${process.env.PORT}/ws/telemetry/${drone_id}`
 
-      return res.json(flight);
+      return res.json(flight, ws_url);
     } catch (e) {
       next(ApiError.internal(e.message));
     }

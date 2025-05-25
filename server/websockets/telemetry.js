@@ -1,76 +1,104 @@
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 const NodeCache = require("node-cache");
-const turf = require('@turf/turf');
-const { Flight } = require("../models/models");
+const turf = require("@turf/turf");
+const { Flight, Notification } = require("../models/models");
 
 const cache = new NodeCache({ stdTTL: 60 });
 
-function isDroneInsideZone([lng, lat], zoneType, zoneData) {
-  const point = turf.point([lng, lat]);
+// Все клиенты-юзеры
+const trackingClients = new Set();
 
-  if (zoneType === "polygon") {
-    const polygon = turf.polygon([zoneData.coordinates]);
-    return turf.booleanPointInPolygon(point, polygon);
-  } else if (zoneType === "circle") {
-    const center = turf.point(zoneData.center);
-    const distance = turf.distance(center, point, { units: 'meters' });
-    return distance <= zoneData.radius;
-  } else {
-    return false;
-  }
+function isDroneInsideZone([lng, lat], zoneData) {
+  const point = turf.point([lng, lat]);
+  const polygon = turf.polygon([zoneData.coordinates]);
+  return turf.booleanPointInPolygon(point, polygon);
 }
 
-async function handleTelemetry(data) {
-  const droneId = data.drone_id;
-  const coords = [data.lng, data.lat]; 
+async function handleTelemetry(data, droneId) {
+  const coords = [data.lng, data.lat];
+  const payload = { droneId, lat: data.lat, lng: data.lng };
 
-  cache.set(`drone:${droneId}`, { lat: data.lat, lng: data.lng });
+  cache.set(`drone:${droneId}`, payload);
 
-  const flight = await Flight.findOne({ where: { drone_id: droneId, status: 'active' } });
-  if (!flight || !flight.zoneType || !flight.zoneData) {
-    console.warn(`No active flight or zone config for drone ${droneId}`);
-    return;
+  // Проверка выхода за зону
+  const flight = await Flight.findOne({ where: { drone_id: droneId, status: "active" } });
+  if (flight && flight.zoneData) {
+    const inside = isDroneInsideZone(coords, flight.zoneData);
+    if (!inside) {
+      console.warn(`🚨 Drone ${droneId} exited allowed zone`);
+      Notification.create({
+        user_id: flight.pilot_id,
+        message: `Drone ${droneId} exited allowed zone`,
+        type: "warning",
+      })
+    }
   }
 
-  const inside = isDroneInsideZone(coords, flight.zoneType, flight.zoneData);
-  if (!inside) {
-    console.warn(`Drone ${droneId} exited the allowed zone`);
+  // Рассылаем всем клиентам
+  broadcastToClients(payload);
+}
+
+function broadcastToClients(data) {
+  const message = JSON.stringify({ type: "drone_position", data });
+
+  for (const client of trackingClients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
   }
 }
 
 function initWebSocketTelemetry(server) {
-    const wss = new WebSocket.Server({ server });
-  
-    wss.on('connection', (ws, req) => {
-      const url = new URL(req.url, `http://${req.headers.host}`);
-      const droneId = url.searchParams.get('drone_id');
-  
-      if (!droneId) {
-        ws.close(1008, 'Missing drone_id');
-        return;
-      }
-  
-      ws.droneId = droneId;
-      console.log(`WebSocket connected for drone ${droneId}`);
-  
-      ws.on('message', async (message) => {
+  const wss = new WebSocket.Server({ noServer: true });
+
+  server.on("upgrade", (req, socket, head) => {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+
+    if (url.pathname.startsWith("/ws/telemetry/")) {
+      const droneId = url.pathname.split("/").pop();
+
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        ws.droneId = droneId;
+        wss.emit("connection", ws, req);
+      });
+    }
+
+    if (url.pathname === "/ws/track") {
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        ws.isTrackingClient = true;
+        wss.emit("connection", ws, req);
+      });
+    }
+  });
+
+  wss.on("connection", (ws, req) => {
+    if (ws.isTrackingClient) {
+      console.log("📡 Tracking client connected");
+      trackingClients.add(ws);
+
+      ws.on("close", () => {
+        trackingClients.delete(ws);
+      });
+    } else {
+      const droneId = ws.droneId;
+      console.log(`🛸 Drone connected: ${droneId}`);
+
+      ws.on("message", async (message) => {
         try {
           const data = JSON.parse(message);
-          data.drone_id = droneId;
-          await handleTelemetry(data);
-          ws.send(JSON.stringify({ status: 'ok' }));
+          await handleTelemetry(data, droneId);
+          ws.send(JSON.stringify({ status: "ok" }));
         } catch (err) {
-          console.error('Error processing message:', err);
-          ws.send(JSON.stringify({ status: 'error', message: err.message }));
+          console.error("Error handling telemetry:", err);
+          ws.send(JSON.stringify({ status: "error", message: err.message }));
         }
       });
-  
-      ws.on('close', () => {
-        console.log(`Drone ${droneId} disconnected`);
+
+      ws.on("close", () => {
+        console.log(`🛑 Drone ${droneId} disconnected`);
       });
-    });
-  
-    return wss;
-  }
-  
+    }
+  });
+}
+
 module.exports = { initWebSocketTelemetry };

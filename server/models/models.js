@@ -52,6 +52,13 @@ const NoFlyZone = sequelize.define("no_fly_zone", {
   },
 });
 
+const Notification = sequelize.define("notification", {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  user_id: { type: DataTypes.INTEGER, allowNull: false },
+  message: { type: DataTypes.STRING, allowNull: false },
+  type: { type: DataTypes.STRING, allowNull: false },
+});
+
 User.hasMany(Drone, { foreignKey: "owner_id", as: "ownedDrones" });
 Drone.belongsTo(User, { foreignKey: "owner_id", as: "owner" });
 
@@ -63,10 +70,12 @@ Flight.belongsTo(Drone, { foreignKey: "drone_id" });
 
 User.hasMany(NoFlyZone, { foreignKey: "created_by", as: "createdZones" });
 NoFlyZone.belongsTo(User, { foreignKey: "created_by", as: "creator" });
+Notification.hasOne(User, { foreignKey: "user_id", as: "user" });
 
 module.exports = {
   User,
   Drone,
   Flight,
   NoFlyZone,
+  Notification
 };
