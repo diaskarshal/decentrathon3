@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const $host = axios.create({//does not require auth
+const $host = axios.create({
   baseURL: "http://localhost:5000",
 });
 
-const $authHost = axios.create({//requires auth, header authorizaiton will be added automatically
+const $authHost = axios.create({
   baseURL: "http://localhost:5000",
 });
 

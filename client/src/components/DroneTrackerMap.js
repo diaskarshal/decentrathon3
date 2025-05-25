@@ -8,7 +8,6 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Исправление путей иконок leaflet
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -21,11 +20,10 @@ L.Icon.Default.mergeOptions({
 });
 
 const DroneTrackerMap = () => {
-  const [drones, setDrones] = useState({}); // drone_id: [lat, lng]
+  const [drones, setDrones] = useState({});
   const socketRef = useRef(null);
 
   useEffect(() => {
-    // Подключение к WebSocket серверу
     socketRef.current = new WebSocket("ws://localhost:5001/ws/track");
 
     socketRef.current.onmessage = (event) => {
@@ -40,7 +38,7 @@ const DroneTrackerMap = () => {
           }));
         }
       } catch (error) {
-        console.error("Ошибка при обработке сообщения WS:", error);
+        console.error("Error with WS:", error);
       }
     };
 

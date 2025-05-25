@@ -41,7 +41,7 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
       onDroneCreated();
       handleClose();
     } catch (err) {
-      console.error("Ошибка при создании дрона:", err);
+      console.error("Error while adding drone:", err);
     }
   };
 
@@ -55,12 +55,12 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
       style={{ width: "500px", zIndex: 1050 }}
     >
       <Offcanvas.Header closeButton closeVariant="white">
-        <Offcanvas.Title>Добавить дрон</Offcanvas.Title>
+        <Offcanvas.Title>Add drone</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
         <Form>
           <Form.Group className="mb-3">
-            <Form.Label>Название дрона</Form.Label>
+            <Form.Label>Drone name</Form.Label>
             <Form.Control
               type="text"
               name="name"
@@ -71,7 +71,7 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
 
           <Row className="mb-3">
             <Col>
-              <Form.Label>Серийный номер</Form.Label>
+              <Form.Label>Serial</Form.Label>
               <Form.Control
                 type="number"
                 name="serial"
@@ -80,7 +80,7 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
               />
             </Col>
             <Col>
-              <Form.Label>Модель</Form.Label>
+              <Form.Label>Model</Form.Label>
               <Form.Control
                 type="text"
                 name="model"
@@ -95,7 +95,7 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
             onClick={handleSubmit}
             disabled={formData.name === "" || formData.serial === "" || formData.model === ""}
           >
-            Отправить заявку
+            Add drone
           </Button>
         </Form>
       </Offcanvas.Body>
@@ -112,7 +112,7 @@ const Drones = ({ show, handleClose }) => {
       const data = await getMyDrones();
       setDrones(data);
     } catch (error) {
-      console.error("Ошибка при загрузке дронов:", error);
+      console.error("Error while adding drone:", error);
     }
   };
 
@@ -127,7 +127,7 @@ const Drones = ({ show, handleClose }) => {
 
   return (
     <>
-      {/* Основной оффканвас со списком дронов */}
+      {/* */}
       <Offcanvas
         show={show}
         onHide={handleClose}
@@ -137,26 +137,26 @@ const Drones = ({ show, handleClose }) => {
         style={{ width: "500px", zIndex: 1040 }}
       >
         <Offcanvas.Header closeButton closeVariant="white">
-          <Offcanvas.Title>Мои дроны</Offcanvas.Title>
+          <Offcanvas.Title>My drones</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
           <Button variant="primary" className="mb-3" onClick={handleOpenRequestForm}>
-            ➕ Добавить дрон
+            Add drone
           </Button>
 
           <ListGroup variant="flush">
             {drones.map((drone) => (
               <ListGroup.Item key={drone.id} className="bg-secondary text-white mb-2 rounded">
                 <div><strong>{drone.name}</strong></div>
-                <div>Серийный: {drone.serial}</div>
-                <div>Модель: {drone.model}</div>
+                <div>Serial: {drone.serial}</div>
+                <div>Model: {drone.model}</div>
               </ListGroup.Item>
             ))}
           </ListGroup>
         </Offcanvas.Body>
       </Offcanvas>
 
-      {/* Поверхностный оффканвас для создания дрона */}
+      {/**/}
       <DronesForm
         show={showRequestForm}
         handleClose={handleCloseRequestForm}

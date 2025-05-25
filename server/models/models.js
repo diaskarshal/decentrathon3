@@ -58,12 +58,11 @@ const Notification = sequelize.define("notification", {
   type: { type: DataTypes.STRING, allowNull: false },
 });
 
-// Fixed associations
 User.hasMany(Drone, { foreignKey: "owner_id", as: "ownedDrones" });
 Drone.belongsTo(User, { foreignKey: "owner_id", as: "owner" });
 
 User.hasMany(Flight, { foreignKey: "pilot_id", as: "flights" });
-Flight.belongsTo(User, { foreignKey: "pilot_id", as: "user" }); //сhanged alias to from 'pilot' to 'user'
+Flight.belongsTo(User, { foreignKey: "pilot_id", as: "user" });
 
 Drone.hasMany(Flight, { foreignKey: "drone_id", as: "flights" });
 Flight.belongsTo(Drone, { foreignKey: "drone_id", as: "drone" });

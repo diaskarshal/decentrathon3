@@ -10,7 +10,6 @@ import { MapContainer, TileLayer, Polygon, Marker, useMapEvent } from "react-lea
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix icon paths for Leaflet
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -21,7 +20,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Component to handle drawing clicks
 const ClickHandler = ({ isDrawing, onAddPoint }) => {
   useMapEvent("click", (e) => {
     if (isDrawing) {
@@ -82,7 +80,7 @@ const RequestFlight = ({ show, handleClose }) => {
   return (
     <Offcanvas show={show} onHide={handleClose} placement="start" backdrop={false} className="bg-dark text-white" style={{ width: "500px" }}>
       <Offcanvas.Header closeButton closeVariant="white">
-        <Offcanvas.Title>Запрос на полёт</Offcanvas.Title>
+        <Offcanvas.Title>Flight request</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
         <Form>
@@ -160,7 +158,7 @@ const RequestFlight = ({ show, handleClose }) => {
           </Row>
 
           <Form.Group className="mb-3">
-            <Form.Label>Цель</Form.Label>
+            <Form.Label>Purpose</Form.Label>
             <Form.Control
               type="text"
               name="purpose"
@@ -180,7 +178,7 @@ const RequestFlight = ({ show, handleClose }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Зона (координаты)</Form.Label>
+            <Form.Label>Zone (coordinates)</Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
@@ -190,13 +188,15 @@ const RequestFlight = ({ show, handleClose }) => {
             />
           </Form.Group>
 
-          <Button variant="outline-light" className="mb-3" onClick={handleStartDrawing}>
-            Выбрать зону на карте
-          </Button>
+          <div className="d-flex gap-2 mb-3">
+            <Button variant="outline-light" onClick={handleStartDrawing}>
+              Choose zone on map
+            </Button>
+            <Button variant="success" onClick={handleSubmit} disabled={zonePoints.length < 3}>
+              Send request
+            </Button>
+          </div>
 
-          <Button variant="success" onClick={handleSubmit} disabled={zonePoints.length < 3}>
-            Отправить заявку
-          </Button>
         </Form>
 
         {isDrawing && (
