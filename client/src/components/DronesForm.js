@@ -5,10 +5,9 @@ import {
   Form,
   Row,
   Col,
-  Alert,
-  Spinner,
+  ListGroup,
 } from "react-bootstrap";
-import { createDrone } from "../http/droneAPI";
+import { createDrone, getMyDrones } from "../http/droneAPI";
 
 const DronesForm = ({ show, handleClose, onDroneCreated }) => {
   const [formData, setFormData] = useState({
@@ -18,8 +17,6 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
   });
 
   const [zonePoints, setZonePoints] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [feedback, setFeedback] = useState({ success: null, message: "" });
 
   useEffect(() => {
     if (zonePoints.length >= 3) {
@@ -38,29 +35,13 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true);
-    setFeedback({ success: null, message: "" });
-    console.log("🔧 Отправка формы:", formData);
-
     try {
-      const response = await createDrone(formData);
-      console.log("✅ Успешно создан дрон:", response);
-
-      setFeedback({ success: true, message: "Дрон успешно создан!" });
-      onDroneCreated(); // обновить список
-      setTimeout(() => {
-        handleClose();
-        setFormData({ name: "", serial: "", model: "" });
-        setFeedback({ success: null, message: "" });
-      }, 1000);
+      await createDrone(formData);
+      console.log(formData);
+      onDroneCreated();
+      handleClose();
     } catch (err) {
-      console.error("❌ Ошибка при создании дрона:", err);
-      setFeedback({
-        success: false,
-        message: "Ошибка при создании дрона. Проверьте данные и попробуйте снова.",
-      });
-    } finally {
-      setIsLoading(false);
+      console.error("Ошибка при создании дрона:", err);
     }
   };
 
@@ -77,12 +58,6 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
         <Offcanvas.Title>Добавить дрон</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
-        {feedback.message && (
-          <Alert variant={feedback.success ? "success" : "danger"}>
-            {feedback.message}
-          </Alert>
-        )}
-
         <Form>
           <Form.Group className="mb-3">
             <Form.Label>Название дрона</Form.Label>
@@ -91,7 +66,6 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              disabled={isLoading}
             />
           </Form.Group>
 
@@ -103,7 +77,6 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
                 name="serial"
                 value={formData.serial}
                 onChange={handleChange}
-                disabled={isLoading}
               />
             </Col>
             <Col>
@@ -113,7 +86,6 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
                 name="model"
                 value={formData.model}
                 onChange={handleChange}
-                disabled={isLoading}
               />
             </Col>
           </Row>
@@ -121,16 +93,9 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
           <Button
             variant="success"
             onClick={handleSubmit}
-            disabled={isLoading || formData.name === "" || formData.serial === "" || formData.model === ""}
+            disabled={formData.name === "" || formData.serial === "" || formData.model === ""}
           >
-            {isLoading ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Отправка...
-              </>
-            ) : (
-              "Отправить заявку"
-            )}
+            Отправить заявку
           </Button>
         </Form>
       </Offcanvas.Body>
@@ -138,4 +103,67 @@ const DronesForm = ({ show, handleClose, onDroneCreated }) => {
   );
 };
 
-export default DronesForm;
+const Drones = ({ show, handleClose }) => {
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [drones, setDrones] = useState([]);
+
+  const fetchDrones = async () => {
+    try {
+      const data = await getMyDrones();
+      setDrones(data);
+    } catch (error) {
+      console.error("Ошибка при загрузке дронов:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (show) {
+      fetchDrones();
+    }
+  }, [show]);
+
+  const handleOpenRequestForm = () => setShowRequestForm(true);
+  const handleCloseRequestForm = () => setShowRequestForm(false);
+
+  return (
+    <>
+      {/* Основной оффканвас со списком дронов */}
+      <Offcanvas
+        show={show}
+        onHide={handleClose}
+        placement="start"
+        backdrop={false}
+        className="bg-dark text-white"
+        style={{ width: "500px", zIndex: 1040 }}
+      >
+        <Offcanvas.Header closeButton closeVariant="white">
+          <Offcanvas.Title>Мои дроны</Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body>
+          <Button variant="primary" className="mb-3" onClick={handleOpenRequestForm}>
+            ➕ Добавить дрон
+          </Button>
+
+          <ListGroup variant="flush">
+            {drones.map((drone) => (
+              <ListGroup.Item key={drone.id} className="bg-secondary text-white mb-2 rounded">
+                <div><strong>{drone.name}</strong></div>
+                <div>Серийный: {drone.serial}</div>
+                <div>Модель: {drone.model}</div>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        </Offcanvas.Body>
+      </Offcanvas>
+
+      {/* Поверхностный оффканвас для создания дрона */}
+      <DronesForm
+        show={showRequestForm}
+        handleClose={handleCloseRequestForm}
+        onDroneCreated={fetchDrones}
+      />
+    </>
+  );
+};
+
+export default Drones;
