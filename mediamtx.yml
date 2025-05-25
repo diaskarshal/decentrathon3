@@ -1,0 +1,39 @@
+authHTTPAddress: http://localhost:8000/auth
+authHTTPExclude:
+- action: api
+- action: metrics
+- action: pprof
+- action: read
+- action: publish
+- action: playback
+
+api: yes
+apiAllowOrigin: "*"
+
+rtsp: yes
+
+rtspTransports: [udp, multicast, tcp]
+
+rtspEncryption: "no"
+
+rtspAddress: :8554
+
+rtspsAddress: :8322
+
+rtpAddress: :8000
+
+rtcpAddress: :8001
+
+multicastIPRange: 224.1.0.0/16
+
+multicastRTPPort: 8002
+
+multicastRTCPPort: 8003
+
+rtmp: yes
+
+rtmpAddress: :1935
+
+rtmpEncryption: "no"
+
+rtmpsAddress: :1936
