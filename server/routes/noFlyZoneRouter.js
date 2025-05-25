@@ -1,11 +1,16 @@
 const Router = require("express");
 const router = new Router();
 const noFlyZoneController = require("../controllers/noFlyZoneController");
+const authMiddleware = require("../middleware/authMiddleware");
+const checkRoleMiddleware = require("../middleware/checkRoleMiddleware");
 
-router.post("/", noFlyZoneController.create);
+//Admin only CRUD
+router.post("/", authMiddleware, checkRoleMiddleware("ADMIN"), noFlyZoneController.create);
+router.put("/:id", authMiddleware, checkRoleMiddleware("ADMIN"), noFlyZoneController.update);
+router.delete("/:id", authMiddleware, checkRoleMiddleware("ADMIN"), noFlyZoneController.delete);
+
+//Public
 router.get("/", noFlyZoneController.getAll);
 router.get("/:id", noFlyZoneController.getOne);
-router.put("/:id", noFlyZoneController.update);
-router.delete("/:id", noFlyZoneController.delete);
 
 module.exports = router;

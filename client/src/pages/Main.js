@@ -4,6 +4,7 @@ import { Context } from "../index";
 import DroneTrackerMap from "../components/DroneTrackerMap";
 import RequestFlight from "../components/RequestFlight";
 import DronesForm from "../components/DronesForm";
+import AddNoFlyZone from "../components/AddNoFlyZone";
 
 const MainPage = observer(() => {
   const { ui } = useContext(Context);
@@ -11,8 +12,18 @@ const MainPage = observer(() => {
   return (
     <>
       <DroneTrackerMap />
-      <RequestFlight show={ui.showFlightForm} handleClose={() => ui.closeFlightForm()} />
-      <DronesForm show={ui.showDronesForm} handleClose={() => ui.closeDronesForm()} />
+      <RequestFlight
+        show={ui.showFlightForm}
+        handleClose={() => ui.closeFlightForm()}
+      />
+      <DronesForm
+        show={ui.showDronesForm}
+        handleClose={() => ui.closeDronesForm()}
+      />
+      <AddNoFlyZone
+        show={ui.showNoFlyZoneForm}
+        handleClose={() => ui.closeNoFlyZoneForm()}
+      />
     </>
   );
 });

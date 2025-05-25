@@ -4,14 +4,28 @@ const ApiError = require("../error/ApiError");
 class NoFlyZoneController {
   async create(req, res, next) {
     try {
-      const { geojson, description } = req.body;
+      const { geojson, description, zone_type = "polygon", zone_data } = req.body;
       
-      if (!geojson) {
-        return next(ApiError.badRequest("GeoJSON is required"));
+      if (!geojson || !description) {
+        return next(ApiError.badRequest("GeoJSON and description are required"));
       }
 
-      const noFlyZone = await NoFlyZone.create({ geojson, description });
-      return res.json(noFlyZone);
+      if (!zone_data || !zone_data.coordinates || zone_data.coordinates.length < 3) {
+        return next(ApiError.badRequest("Zone must have at least 3 coordinate points"));
+      }
+
+      const noFlyZone = await NoFlyZone.create({ 
+        geojson, 
+        description, 
+        zone_type,
+        zone_data,
+        created_by: req.user?.id 
+      });
+      
+      return res.status(201).json({
+        message: "No-fly zone created successfully",
+        noFlyZone
+      });
     } catch (e) {
       next(ApiError.internal(e.message));
     }
@@ -19,7 +33,9 @@ class NoFlyZoneController {
 
   async getAll(req, res, next) {
     try {
-      const noFlyZones = await NoFlyZone.findAll();
+      const noFlyZones = await NoFlyZone.findAll({
+        order: [["createdAt", "DESC"]]
+      });
       return res.json(noFlyZones);
     } catch (e) {
       next(ApiError.internal(e.message));
@@ -44,15 +60,18 @@ class NoFlyZoneController {
   async update(req, res, next) {
     try {
       const { id } = req.params;
-      const { geojson, description } = req.body;
+      const { geojson, description, zone_type, zone_data } = req.body;
 
       const noFlyZone = await NoFlyZone.findOne({ where: { id } });
       if (!noFlyZone) {
         return next(ApiError.notFound("NoFlyZone not found"));
       }
 
-      await noFlyZone.update({ geojson, description });
-      return res.json(noFlyZone);
+      await noFlyZone.update({ geojson, description, zone_type, zone_data });
+      return res.json({
+        message: "No-fly zone updated successfully",
+        noFlyZone
+      });
     } catch (e) {
       next(ApiError.internal(e.message));
     }
@@ -68,7 +87,7 @@ class NoFlyZoneController {
       }
 
       await noFlyZone.destroy();
-      return res.json({ message: "NoFlyZone deleted successfully" });
+      return res.json({ message: "No-fly zone deleted successfully" });
     } catch (e) {
       next(ApiError.internal(e.message));
     }

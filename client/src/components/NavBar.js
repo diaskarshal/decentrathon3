@@ -6,16 +6,11 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LOGIN_ROUTE,
   MAIN_ROUTE,
-  // REQUEST_FLIGHT_ROUTE,
   MY_FLIGHTS_ROUTE,
   ADMIN_REQUESTS_ROUTE,
   ALL_FLIGHTS_ROUTE,
 } from "../utils/consts";
-import {
-  Button,
-  NavDropdown,
-  Container,
-} from "react-bootstrap";
+import { Button, NavDropdown, Container } from "react-bootstrap";
 import { observer } from "mobx-react-lite";
 
 const NavBar = observer(() => {
@@ -30,7 +25,9 @@ const NavBar = observer(() => {
     navigate(LOGIN_ROUTE);
   };
 
-  const isAuthPage = location.pathname === LOGIN_ROUTE || location.pathname === "/registration";
+  const isAuthPage =
+    location.pathname === LOGIN_ROUTE ||
+    location.pathname === "/registration";
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
@@ -89,6 +86,13 @@ const NavBar = observer(() => {
                     style={{ color: "white" }}
                   >
                     All Flights
+                  </Nav.Link>
+                  <Nav.Link
+                    as="span"
+                    onClick={() => ui.openNoFlyZoneForm()}
+                    style={{ color: "white", cursor: "pointer" }}
+                  >
+                    Add No-Fly Zone
                   </Nav.Link>
                 </>
               )}
