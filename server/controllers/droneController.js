@@ -4,9 +4,10 @@ const ApiError = require("../error/ApiError");
 class DroneController {
   async create(req, res, next) {
     try {
-      const { name, model, serial, owner_id } = req.body;
+      const { name, model, serial } = req.body;
+      const owner_id = req.user.id;
       
-      if (!name || !model || !serial || !owner_id) {
+      if (!name || !model || !serial) {
         return next(ApiError.badRequest("Please fill in all fields"));
       }
 
@@ -58,14 +59,14 @@ class DroneController {
   async update(req, res, next) {
     try {
       const { id } = req.params;
-      const { brand, model, serial } = req.body;
+      const { name, model, serial } = req.body;
 
       const drone = await Drone.findOne({ where: { id } });
       if (!drone) {
         return next(ApiError.notFound("Drone not found"));
       }
 
-      await drone.update({ brand, model, serial });
+      await drone.update({ name, model, serial });
       return res.json(drone);
     } catch (e) {
       if (e.name === "SequelizeUniqueConstraintError") {

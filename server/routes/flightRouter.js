@@ -1,4 +1,3 @@
-// /server/routes/flightRouter.js
 const Router = require("express");
 const router = new Router();
 const flightController = require("../controllers/flightController");
@@ -14,6 +13,14 @@ router.post(
   checkRoleMiddleware("ADMIN"),
   flightController.approve
 );
+
+router.post(
+  "/:id/reject",
+  authMiddleware,
+  checkRoleMiddleware("ADMIN"),
+  flightController.reject
+);
+
 router.post(
   "/:id/finish",
   authMiddleware,

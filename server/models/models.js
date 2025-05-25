@@ -34,6 +34,7 @@ const Flight = sequelize.define("flight", {
   end_time: { type: DataTypes.DATE },
   altitude: { type: DataTypes.FLOAT, allowNull: false },
   purpose: { type: DataTypes.STRING },
+  rejection_reason: { type: DataTypes.TEXT },
 });
 
 const NoFlyZone = sequelize.define("no_fly_zone", {

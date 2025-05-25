@@ -1,14 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
+// import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Offcanvas,
   Button,
   Form,
   Row,
   Col,
+  Alert,
 } from "react-bootstrap";
 import { MapContainer, TileLayer, Polygon, Marker, useMapEvent } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { createFlight } from "../http/flightAPI";
+import { getMyDrones } from "../http/droneAPI";
 
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -32,7 +36,6 @@ const ClickHandler = ({ isDrawing, onAddPoint }) => {
 const RequestFlight = ({ show, handleClose }) => {
   const [formData, setFormData] = useState({
     drone_id: "",
-    zone_data: "",
     min_altitude: "",
     max_altitude: "",
     start_date: "",
@@ -45,15 +48,34 @@ const RequestFlight = ({ show, handleClose }) => {
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [zonePoints, setZonePoints] = useState([]);
+  const [drones, setDrones] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (show) {
+      fetchDrones();
+    }
+  }, [show]);
 
   useEffect(() => {
     if (zonePoints.length >= 3) {
       setFormData((prev) => ({
         ...prev,
-        zone_data: JSON.stringify(zonePoints),
+        route: zonePoints,
       }));
     }
   }, [zonePoints]);
+
+  const fetchDrones = async () => {
+    try {
+      const dronesData = await getMyDrones();
+      setDrones(dronesData);
+    } catch (error) {
+      setError("Failed to load drones");
+    }
+  };
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -62,10 +84,57 @@ const RequestFlight = ({ show, handleClose }) => {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log("Flight submitted:", formData);
-    // TODO: send to backend
-    handleClose();
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      if (!formData.drone_id || zonePoints.length < 3) {
+        setError("Please select a drone and draw a flight zone");
+        return;
+      }
+
+      const startDateTime = new Date(`${formData.start_date}T${formData.start_time}`);
+      const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`);
+
+      const flightData = {
+        drone_id: parseInt(formData.drone_id),
+        pilot_id: JSON.parse(localStorage.getItem("token") ? 
+          JSON.parse(atob(localStorage.getItem("token").split('.')[1])).id : null),
+        route: zonePoints,
+        rtmp_url: formData.rtmp_url || null,
+        altitude: parseFloat(formData.max_altitude),
+        purpose: formData.purpose,
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+      };
+
+      await createFlight(flightData);
+      setSuccess("Flight request submitted successfully!");
+      
+      setFormData({
+        drone_id: "",
+        min_altitude: "",
+        max_altitude: "",
+        start_date: "",
+        start_time: "",
+        end_date: "",
+        end_time: "",
+        purpose: "",
+        rtmp_url: "",
+      });
+      setZonePoints([]);
+      
+      setTimeout(() => {
+        handleClose();
+        setSuccess("");
+      }, 2000);
+      
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to submit flight request");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStartDrawing = () => {
@@ -77,26 +146,46 @@ const RequestFlight = ({ show, handleClose }) => {
     setZonePoints((prev) => [...prev, point]);
   };
 
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
   return (
-    <Offcanvas show={show} onHide={handleClose} placement="start" backdrop={false} className="bg-dark text-white" style={{ width: "500px" }}>
+    <Offcanvas 
+      show={show} 
+      onHide={handleClose} 
+      placement="start" 
+      backdrop={false} 
+      className="bg-dark text-white" 
+      style={{ width: "500px" }}
+    >
       <Offcanvas.Header closeButton closeVariant="white">
         <Offcanvas.Title>Flight request</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
+        {error && <Alert variant="danger">{error}</Alert>}
+        {success && <Alert variant="success">{success}</Alert>}
+        
         <Form>
           <Form.Group className="mb-3">
-            <Form.Label>Drone ID</Form.Label>
-            <Form.Control
-              type="text"
+            <Form.Label>Select Drone</Form.Label>
+            <Form.Select
               name="drone_id"
               value={formData.drone_id}
               onChange={handleChange}
-            />
+            >
+              <option value="">Choose a drone...</option>
+              {drones.map((drone) => (
+                <option key={drone.id} value={drone.id}>
+                  {drone.name} ({drone.model})
+                </option>
+              ))}
+            </Form.Select>
           </Form.Group>
 
           <Row className="mb-3">
             <Col>
-              <Form.Label>Min Altitude</Form.Label>
+              <Form.Label>Min Altitude (m)</Form.Label>
               <Form.Control
                 type="number"
                 name="min_altitude"
@@ -105,12 +194,13 @@ const RequestFlight = ({ show, handleClose }) => {
               />
             </Col>
             <Col>
-              <Form.Label>Max Altitude</Form.Label>
+              <Form.Label>Max Altitude (m)</Form.Label>
               <Form.Control
                 type="number"
                 name="max_altitude"
                 value={formData.max_altitude}
                 onChange={handleChange}
+                required
               />
             </Col>
           </Row>
@@ -123,6 +213,7 @@ const RequestFlight = ({ show, handleClose }) => {
                 name="start_date"
                 value={formData.start_date}
                 onChange={handleChange}
+                required
               />
             </Col>
             <Col>
@@ -132,6 +223,7 @@ const RequestFlight = ({ show, handleClose }) => {
                 name="start_time"
                 value={formData.start_time}
                 onChange={handleChange}
+                required
               />
             </Col>
           </Row>
@@ -144,6 +236,7 @@ const RequestFlight = ({ show, handleClose }) => {
                 name="end_date"
                 value={formData.end_date}
                 onChange={handleChange}
+                required
               />
             </Col>
             <Col>
@@ -153,6 +246,7 @@ const RequestFlight = ({ show, handleClose }) => {
                 name="end_time"
                 value={formData.end_time}
                 onChange={handleChange}
+                required
               />
             </Col>
           </Row>
@@ -164,42 +258,50 @@ const RequestFlight = ({ show, handleClose }) => {
               name="purpose"
               value={formData.purpose}
               onChange={handleChange}
+              required
             />
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>RTMP URL</Form.Label>
-            <Form.Control
-              type="text"
-              name="rtmp_url"
-              value={formData.rtmp_url}
-              onChange={handleChange}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Zone (coordinates)</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={formData.zone_data}
-              readOnly
-              style={{ fontSize: "0.85em", backgroundColor: "#222", color: "#ccc" }}
-            />
+            <Form.Label>Flight Zone ({zonePoints.length} points)</Form.Label>
+            <div className="d-flex gap-2 mb-2">
+              <Button 
+                variant="outline-light" 
+                size="sm"
+                onClick={handleStartDrawing}
+                disabled={isDrawing}
+              >
+                {isDrawing ? "Drawing..." : "Draw Zone"}
+              </Button>
+              {isDrawing && (
+                <Button variant="outline-warning" size="sm" onClick={stopDrawing}>
+                  Stop Drawing
+                </Button>
+              )}
+              {zonePoints.length > 0 && (
+                <Button 
+                  variant="outline-danger" 
+                  size="sm" 
+                  onClick={() => setZonePoints([])}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
           </Form.Group>
 
           <div className="d-flex gap-2 mb-3">
-            <Button variant="outline-light" onClick={handleStartDrawing}>
-              Choose zone on map
-            </Button>
-            <Button variant="success" onClick={handleSubmit} disabled={zonePoints.length < 3}>
-              Send request
+            <Button 
+              variant="success" 
+              onClick={handleSubmit} 
+              disabled={loading || !formData.drone_id || zonePoints.length < 3}
+            >
+              {loading ? "Submitting..." : "Send Request"}
             </Button>
           </div>
-
         </Form>
 
-        {isDrawing && (
+        {(isDrawing || zonePoints.length > 0) && (
           <div style={{ marginTop: "20px", border: "1px solid #444" }}>
             <MapContainer
               center={[51.13, 71.42]}
@@ -210,7 +312,7 @@ const RequestFlight = ({ show, handleClose }) => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               <ClickHandler isDrawing={isDrawing} onAddPoint={handleAddPoint} />
-              {zonePoints.length > 0 && <Polygon positions={zonePoints} />}
+              {zonePoints.length > 2 && <Polygon positions={zonePoints} />}
               {zonePoints.map((pos, idx) => (
                 <Marker key={idx} position={pos} />
               ))}

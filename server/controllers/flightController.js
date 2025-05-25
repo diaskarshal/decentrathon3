@@ -27,20 +27,20 @@ const deleteStreamPath = async (flightId) => {
 class FlightController {
   async create(req, res, next) {
     try {
-      const { drone_id, pilot_id, route, rtmp_url, altitude, purpose } = req.body;
+      const { drone_id, pilot_id, route, rtmp_url, altitude, purpose, start_time, end_time } = req.body;
       
-      if (!drone_id || !pilot_id || !route) {
+      if (!drone_id || !pilot_id || !route || !altitude || !start_time || !end_time) {
         return next(ApiError.badRequest("Please fill in all fields"));
       }
 
       const drone = await Drone.findByPk(drone_id);
       const pilot = await User.findByPk(pilot_id);
-      
+
       if (!drone) {
         return next(ApiError.notFound("Drone not found"));
       }
       if (!pilot) {
-        return next(ApiError.notFound("User not found"));
+        return next(ApiError.notFound("Pilot user not found"));
       }
       const flight = await Flight.create({
         drone_id,
@@ -50,10 +50,16 @@ class FlightController {
         status: "pending",
         altitude,
         purpose,
+        start_time,
+        end_time,
       });
-      const ws_url = `ws://localhost:${process.env.PORT}/ws/telemetry/${drone_id}`
+      const ws_telemetry_url = `ws://${req.hostname}:${process.env.PORT || 5001}/ws/telemetry/${drone_id}`;
 
-      return res.json(flight, ws_url);
+      return res.status(201).json({
+        message: "Flight request created successfully.",
+        flight: flight,
+        ws_telemetry_url: ws_telemetry_url,
+      });
     } catch (e) {
       next(ApiError.internal(e.message));
     }
@@ -64,9 +70,10 @@ class FlightController {
       const flights = await Flight.findAll({
         where: { pilot_id: req.user.id },
         include: [
-          { model: Drone, attributes: ['id', 'brand', 'model', 'serial'] },
-          { model: User, attributes: ['id', 'name', 'phone'] }
-        ]
+          { model: Drone, as: "drone", attributes: ['id', 'name', 'model', 'serial'] },
+          { model: User, as: "user", attributes: ['id', 'name', 'phone', 'email'] }
+        ],
+        order: [["createdAt", "DESC"]],
       });
       return res.json(flights);
     } catch (e) {
@@ -77,10 +84,12 @@ class FlightController {
   async getAll(req, res, next) {
     try {
       const flights = await Flight.findAll({
+        where: { pilot_id: req.user.id },
         include: [
-          { model: Drone, attributes: ['id', 'brand', 'model', 'serial'] },
-          { model: User, attributes: ['id', 'name', 'phone'] }
-        ]
+          { model: Drone, as: "drone", attributes: ['id', 'name', 'model', 'serial'] },
+          { model: User, as: "user", attributes: ['id', 'name', 'phone', 'email'] }
+        ],
+        order: [["createdAt", "DESC"]],
       });
       return res.json(flights);
     } catch (e) {
@@ -94,8 +103,8 @@ class FlightController {
       const flight = await Flight.findOne({
         where: { id },
         include: [
-          { model: Drone },
-          { model: User }
+          { model: Drone, as: "drone", attributes: ['id', 'name', 'model', 'serial'] },
+          { model: User, as: "user", attributes: ['id', 'name', 'phone', 'email'] },
         ]
       });
       
@@ -121,7 +130,7 @@ class FlightController {
       let rtsp_url = null;
       if (flight.rtmp_url) {
         try {
-          rtsp_url = await createStreamPath(id);
+          rtsp_url = await createStreamPath(`flight-${flight.id}`);
         } catch (error) {
           return next(ApiError.internal("Failed to create video stream"));
         }
@@ -130,7 +139,28 @@ class FlightController {
       await flight.update({
         status: "approved",
         rtsp_url,
-        start_time: new Date()
+        // start_time: new Date()
+      });
+
+      return res.json(flight);
+    } catch (e) {
+      next(ApiError.internal(e.message));
+    }
+  }
+
+  async reject(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+      
+      const flight = await Flight.findOne({ where: { id } });
+      if (!flight) {
+        return next(ApiError.notFound("Flight not found"));
+      }
+
+      await flight.update({
+        status: "rejected",
+        rejection_reason: reason || "No reason provided"
       });
 
       return res.json(flight);
@@ -167,14 +197,15 @@ class FlightController {
   async update(req, res, next) {
     try {
       const { id } = req.params;
-      const { drone_id, pilot_id, route, status, rtmp_url, altitude, purpose } = req.body;
+      // const { drone_id, pilot_id, route, status, rtmp_url, altitude, purpose } = req.body;
+      const { drone_id, route, status, rtmp_url, altitude, purpose, start_time, end_time } = req.body;
 
       const flight = await Flight.findOne({ where: { id } });
       if (!flight) {
         return next(ApiError.notFound("Flight not found"));
       }
 
-      await flight.update({ drone_id, pilot_id, route, status, rtmp_url, altitude, purpose });
+      await flight.update({ drone_id, pilot_id, route, status, rtmp_url, altitude, purpose, start_time, end_time });
       return res.json(flight);
     } catch (e) {
       next(ApiError.internal(e.message));

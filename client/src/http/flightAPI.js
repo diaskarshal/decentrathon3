@@ -1,4 +1,4 @@
-import { $authHost, $host } from "./index";
+import { $authHost } from "./index";
 
 export const createFlight = async (flightData) => {
   const { data } = await $authHost.post("api/flight", flightData);
@@ -22,6 +22,11 @@ export const getFlight = async (id) => {
 
 export const approveFlight = async (id) => {
   const { data } = await $authHost.post(`api/flight/${id}/approve`);
+  return data;
+};
+
+export const rejectFlight = async (id, reason = "") => {
+  const { data } = await $authHost.post(`api/flight/${id}/reject`, { reason });
   return data;
 };
 
