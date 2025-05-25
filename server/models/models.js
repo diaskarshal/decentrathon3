@@ -27,7 +27,7 @@ const Flight = sequelize.define("flight", {
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: "pending",
-  }, //pending, approved, active, completed, cancelled
+  },
   rtmp_url: { type: DataTypes.STRING },
   rtsp_url: { type: DataTypes.STRING },
   start_time: { type: DataTypes.DATE },
@@ -48,7 +48,6 @@ const NoFlyZone = sequelize.define("no_fly_zone", {
   zone_data: {
     type: DataTypes.JSONB,
     allowNull: false,
-
   },
 });
 
@@ -59,18 +58,21 @@ const Notification = sequelize.define("notification", {
   type: { type: DataTypes.STRING, allowNull: false },
 });
 
+// Fixed associations
 User.hasMany(Drone, { foreignKey: "owner_id", as: "ownedDrones" });
 Drone.belongsTo(User, { foreignKey: "owner_id", as: "owner" });
 
 User.hasMany(Flight, { foreignKey: "pilot_id", as: "flights" });
-Flight.belongsTo(User, { foreignKey: "pilot_id", as: "pilot" });
+Flight.belongsTo(User, { foreignKey: "pilot_id", as: "user" }); //сhanged alias to from 'pilot' to 'user'
 
-Drone.hasMany(Flight, { foreignKey: "drone_id" });
-Flight.belongsTo(Drone, { foreignKey: "drone_id" });
+Drone.hasMany(Flight, { foreignKey: "drone_id", as: "flights" });
+Flight.belongsTo(Drone, { foreignKey: "drone_id", as: "drone" });
 
 User.hasMany(NoFlyZone, { foreignKey: "created_by", as: "createdZones" });
 NoFlyZone.belongsTo(User, { foreignKey: "created_by", as: "creator" });
-Notification.hasOne(User, { foreignKey: "user_id", as: "user" });
+
+User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
+Notification.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
 module.exports = {
   User,

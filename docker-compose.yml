@@ -35,8 +35,10 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=postgres
       - DB_PORT=5432
+      - PORT=5000
       - MEDIAMTX_API_URL=http://mediamtx:9997
       - MEDIAMTX_HOST=mediamtx
+      - SECRET_KEY=secret
     depends_on:
       - postgres
       - mediamtx

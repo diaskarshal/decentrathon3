@@ -1,4 +1,3 @@
-// store/UIStore.js
 import { makeAutoObservable } from "mobx";
 
 export default class UIStore {

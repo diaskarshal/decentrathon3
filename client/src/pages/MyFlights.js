@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
+// import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Card,
@@ -9,11 +10,11 @@ import {
   Alert,
   Spinner,
 } from "react-bootstrap";
-import { Context } from "../index";
+// import { Context } from "../index";
 import { getMyFlights, getFlight } from "../http/flightAPI";
 
 const MyFlights = () => {
-  const { user } = useContext(Context);
+  // const { user, ui } = useContext(Context);
   const [flights, setFlights] = useState([]);
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -56,7 +57,7 @@ const MyFlights = () => {
       setError("Failed to load flight details");
     }
   };
-
+  
   if (loading) {
     return (
       <Container className="mt-4 text-center">
@@ -74,9 +75,11 @@ const MyFlights = () => {
       <Card>
         <Card.Header className="d-flex justify-content-between align-items-center">
           <h3>My Flights</h3>
-          <Button variant="outline-primary" onClick={fetchMyFlights}>
-            Refresh
-          </Button>
+          <div>
+            <Button variant="outline-primary" onClick={fetchMyFlights}>
+              Refresh
+            </Button>
+          </div>
         </Card.Header>
         <Card.Body>
           <Table striped bordered hover>
@@ -104,7 +107,7 @@ const MyFlights = () => {
                     <td>{flight.id}</td>
                     <td>
                       {flight.drone
-                        ? `${flight.drone.brand} ${flight.drone.model}`
+                        ? `${flight.drone.name} ${flight.drone.model}`
                         : "N/A"}
                     </td>
                     <td>{getStatusBadge(flight.status)}</td>
@@ -149,7 +152,7 @@ const MyFlights = () => {
               <p>
                 <strong>Drone:</strong>{" "}
                 {selectedFlight.drone
-                  ? `${selectedFlight.drone.brand} ${selectedFlight.drone.model} (${selectedFlight.drone.serial})`
+                  ? `${selectedFlight.drone.name} ${selectedFlight.drone.model} (${selectedFlight.drone.serial})`
                   : "N/A"}
               </p>
               <p>

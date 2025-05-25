@@ -5,8 +5,7 @@ import App from "./App";
 import MainPage from "./main/MainPage";
 import UIStore from "./store/UIStore";
 
-
-export const Context = createContext();
+export const Context = createContext(null);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

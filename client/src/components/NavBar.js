@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { Context } from "../index";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LOGIN_ROUTE,
   MAIN_ROUTE,
@@ -21,13 +21,16 @@ import { observer } from "mobx-react-lite";
 const NavBar = observer(() => {
   const { user, ui } = useContext(Context);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const logOut = () => {
     user.setUser({});
     user.setIsAuth(false);
     localStorage.removeItem("token");
-    navigate(MAIN_ROUTE);
+    navigate(LOGIN_ROUTE);
   };
+
+  const isAuthPage = location.pathname === LOGIN_ROUTE || location.pathname === "/registration";
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
@@ -99,14 +102,16 @@ const NavBar = observer(() => {
               </NavDropdown>
             </Nav>
           ) : (
-            <Nav className="ms-auto">
-              <Button
-                variant="outline-light"
-                onClick={() => navigate(LOGIN_ROUTE)}
-              >
-                Login
-              </Button>
-            </Nav>
+            !isAuthPage && (
+              <Nav className="ms-auto">
+                <Button
+                  variant="outline-light"
+                  onClick={() => navigate(LOGIN_ROUTE)}
+                >
+                  Login
+                </Button>
+              </Nav>
+            )
           )}
         </Navbar.Collapse>
       </Container>
