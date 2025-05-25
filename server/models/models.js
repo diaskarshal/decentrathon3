@@ -12,7 +12,7 @@ const User = sequelize.define("user", {
 
 const Drone = sequelize.define("drone", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  brand: { type: DataTypes.STRING, allowNull: false },
+  name: { type: DataTypes.STRING, allowNull: false },
   model: { type: DataTypes.STRING, allowNull: false },
   serial: { type: DataTypes.STRING, allowNull: false, unique: true },
   owner_id: { type: DataTypes.INTEGER, allowNull: false },

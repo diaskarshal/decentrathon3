@@ -3,6 +3,7 @@ import { observer } from "mobx-react-lite";
 import { Context } from "../index";
 import DroneTrackerMap from "../components/DroneTrackerMap";
 import RequestFlight from "../components/RequestFlight";
+import DronesForm from "../components/DronesForm";
 
 const MainPage = observer(() => {
   const { ui } = useContext(Context);
@@ -10,12 +11,10 @@ const MainPage = observer(() => {
   return (
     <>
       <DroneTrackerMap />
-      <RequestFlight show={ui.showFlightForm} handleClose={() => ui.closeForm()} />
+      <RequestFlight show={ui.showFlightForm} handleClose={() => ui.closeFlightForm()} />
+      <DronesForm show={ui.showDronesForm} handleClose={() => ui.closeDronesForm()} />
     </>
-  );"dependencies": {
-    "@turf/turf": "^6.5.0"
-  }
-  
+  );
 });
 
 export default MainPage;

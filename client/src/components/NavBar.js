@@ -49,7 +49,7 @@ const NavBar = observer(() => {
                 <>
                   <Nav.Link
                     as="span"
-                    onClick={() => ui.openForm()}
+                    onClick={() => ui.openFlightForm()}
                     style={{ color: "white", cursor: "pointer" }}
                   >
                     Request Flight
@@ -60,6 +60,13 @@ const NavBar = observer(() => {
                     style={{ color: "white" }}
                   >
                     My Flights
+                  </Nav.Link>
+                  <Nav.Link
+                    as="span"
+                    onClick={() => ui.openDronesForm()}
+                    style={{ color: "white", cursor: "pointer" }}
+                  >
+                    My Drones
                   </Nav.Link>
                 </>
               )}

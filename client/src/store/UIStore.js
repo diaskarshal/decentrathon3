@@ -3,16 +3,24 @@ import { makeAutoObservable } from "mobx";
 
 export default class UIStore {
   showFlightForm = false;
-
+  showDronesForm = false;
   constructor() {
     makeAutoObservable(this);
   }
 
-  openForm() {
+  openFlightForm() {
     this.showFlightForm = true;
   }
 
-  closeForm() {
+  closeFlightForm() {
     this.showFlightForm = false;
+  }
+
+  openDronesForm() {
+    this.showDronesForm = true;
+  }
+
+  closeDronesForm() {
+    this.showDronesForm = false;
   }
 }

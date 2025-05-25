@@ -2,6 +2,7 @@ import { $authHost } from "./index";
 
 export const createDrone = async (droneData) => {
   const { data } = await $authHost.post("api/drone", droneData);
+  console.log(data);
   return data;
 };
 
