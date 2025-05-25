@@ -106,16 +106,25 @@ const DroneTrackerMap = () => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {/* Render Drones */}
+      {/* Render Drones (hard-coded ts)*/}
       {Object.entries(drones).map(([droneId, position]) => (
         <Marker key={`drone-${droneId}`} position={position}>
           <Popup>
-            <strong>Drone ID:</strong> {droneId}
-            <br />
-            <strong>Lat:</strong> {position[0]?.toFixed(5)}
-            <br />
-            <strong>Lng:</strong> {position[1]?.toFixed(5)}
+            <div>
+              <strong>Drone ID:</strong> {droneId}
+              <br />
+              <strong>Coordinates:</strong> {position[0]?.toFixed(5)}, {position[1]?.toFixed(5)}
+              <br />
+              <strong>Status:</strong> Active
+              <br />
+              <strong>Altitude:</strong> 100m
+              <br />
+              <strong>Speed:</strong> 100 km/h
+              <br />
+              <strong>Last Update:</strong> {new Date().toLocaleTimeString()}
+            </div>
           </Popup>
+
         </Marker>
       ))}
 

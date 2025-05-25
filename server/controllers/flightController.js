@@ -1,6 +1,9 @@
 const { Flight, Drone, User } = require("../models/models");
 const ApiError = require("../error/ApiError");
 const axios = require("axios");
+const DroneSimulator = require('../utils/droneSimulator');
+
+const activeSimulators = new Map();
 
 const createStreamPath = async (flightId) => {
   try {
@@ -27,9 +30,10 @@ const deleteStreamPath = async (flightId) => {
 class FlightController {
   async create(req, res, next) {
     try {
-      const { drone_id, pilot_id, route, rtmp_url, altitude, purpose, start_time, end_time } = req.body;
+      const { drone_id, route, rtmp_url, altitude, purpose, start_time, end_time } = req.body;
+      const pilot_id = req.user.id;
       
-      if (!drone_id || !pilot_id || !route || !altitude || !start_time || !end_time) {
+      if (!drone_id || !route || !altitude || !start_time || !end_time) {
         return next(ApiError.badRequest("Please fill in all fields"));
       }
 
@@ -84,7 +88,6 @@ class FlightController {
   async getAll(req, res, next) {
     try {
       const flights = await Flight.findAll({
-        where: { pilot_id: req.user.id },
         include: [
           { model: Drone, as: "drone", attributes: ['id', 'name', 'model', 'serial'] },
           { model: User, as: "user", attributes: ['id', 'name', 'phone', 'email'] }
@@ -122,11 +125,14 @@ class FlightController {
     try {
       const { id } = req.params;
       
-      const flight = await Flight.findOne({ where: { id } });
+      const flight = await Flight.findOne({ 
+        where: { id },
+        include: [{ model: Drone, as: "drone" }]
+      });
       if (!flight) {
         return next(ApiError.notFound("Flight not found"));
       }
-
+  
       let rtsp_url = null;
       if (flight.rtmp_url) {
         try {
@@ -135,13 +141,17 @@ class FlightController {
           return next(ApiError.internal("Failed to create video stream"));
         }
       }
-
+  
       await flight.update({
-        status: "approved",
+        status: "active",
         rtsp_url,
-        // start_time: new Date()
+        start_time: new Date()
       });
 
+      const simulator = new DroneSimulator(flight.drone_id, flight.route);
+      simulator.connect();
+      activeSimulators.set(flight.drone_id, simulator);
+  
       return res.json(flight);
     } catch (e) {
       next(ApiError.internal(e.message));
@@ -178,16 +188,22 @@ class FlightController {
         return next(ApiError.notFound("Flight not found"));
       }
 
+      const simulator = activeSimulators.get(flight.drone_id);
+      if (simulator) {
+        simulator.disconnect();
+        activeSimulators.delete(flight.drone_id);
+      }
+  
       if (flight.rtsp_url) {
         await deleteStreamPath(id);
       }
-
+  
       await flight.update({
         status: "completed",
         end_time: new Date(),
         rtsp_url: null
       });
-
+  
       return res.json(flight);
     } catch (e) {
       next(ApiError.internal(e.message));
